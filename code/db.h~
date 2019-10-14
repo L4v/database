@@ -1,0 +1,13 @@
+typedef struct
+{
+  void* Memory;
+  size_t BufferLen;
+  ssize_t InputLen;
+} input_buffer;
+
+typedef struct
+{
+  void* Memory;
+  size_t MemorySize;
+  uint8 NextMemoryLocation;
+} program_memory;
