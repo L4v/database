@@ -8,6 +8,7 @@ typedef enum
 typedef enum
   {
    PREPARE_SUCCESS = 0,
+   PREPARE_SYNTAX_ERROR,
    PREPARE_UNRECOGNIZED_STATEMENT
   } prepare_result;
 
@@ -16,6 +17,12 @@ typedef enum
    STATEMENT_INSERT = 0,
    STATEMENT_SELECT
   } statement_type;
+
+typedef enum
+  {
+   EXECUTE_SUCCESS = 0,
+   EXECUTE_TABLE_FULL
+  } execute_result;
 
 typedef struct
 {
@@ -35,5 +42,19 @@ typedef struct
 
 typedef struct
 {
-  statement_type Type; 
+  uint32 Id;
+  char Username[COLUMN_USERNAME_SIZE];
+  char Email[COLUMN_EMAIL_SIZE];
+} row;
+
+typedef struct
+{
+  uint32 NumOfRows;
+  void* Pages[TABLE_MAX_PAGES];
+} table;
+
+typedef struct
+{
+  statement_type Type;
+  row RowToInsert;
 } statement;
