@@ -49,13 +49,7 @@ typedef double real64;
 
    total size: 291
 */
-const global_variable uint32 ID_SIZE = SizeOfAttribute(row, Id);
-const global_variable uint32 USERNAME_SIZE = SizeOfAttribute(row, Username);
-const global_variable uint32 EMAIL_SIZE = SizeOfAttribute(row, Email);
-const global_variable uint32 ID_OFFSET = 0;
-const global_variable uint32 USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
-const global_variable uint32 EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
-const global_variable uint32 ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
+const global_variable uint32 ROW_SIZE = sizeof(row);
 const global_variable uint32 PAGE_SIZE = Kibibytes(4);
 const global_variable uint32 ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const global_variable uint32 TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
@@ -122,12 +116,16 @@ PrepareStatement(statement* Statement , input_buffer* Buffer)
 internal void*
 GetRowSlot(table* Table, uint32 RowNum)
 {
-  uint32 PageNum = RowNum / ROWS_PER_PAGE;
-  void* Page = Table->Pages[PageNum];
-  Assert(Page);
-  uint32 RowOffset = RowNum % ROWS_PER_PAGE;
-  uint32 ByteOffset = RowOffset * sizeof(row);
-  return Page + ByteOffset;
+  void* Result = 0;
+  /* uint32 PageNum = RowNum / ROWS_PER_PAGE; */
+  /* void* Page = Table->Pages[PageNum]; */
+  /* Assert(Page); */
+  /* uint32 RowOffset = RowNum % ROWS_PER_PAGE; */
+  /* uint32 ByteOffset = RowOffset * sizeof(row); */
+  /* Result = Page + ByteOffset; */
+  Result = (uint8*)Table->Pages + RowNum * sizeof(row);
+  Assert(Result);
+  return Result;
 }
 
 internal execute_result
@@ -141,9 +139,9 @@ ExecuteSelect(statement* Statement, table* Table)
     {
       Row = (row*)GetRowSlot(Table, RowIndex);
       printf("%d %s %s\n",
-	     Row->Id,
-	     Row->Username,
-	     Row->Email);
+  	     Row->Id,
+  	     Row->Username,
+  	     Row->Email);
     }
 
   return Result;
@@ -161,7 +159,7 @@ ExecuteInsert(statement* Statement, table* Table)
 
   row* WhereToInsert = (row*)GetRowSlot(Table, Table->NumOfRows);
   *WhereToInsert = Statement->RowToInsert;
-  ++Table->NumOfRows;
+  ++(Table->NumOfRows);
   return Result;
 }
 
@@ -177,7 +175,7 @@ ExecuteStatement(statement* Statement, table* Table)
       }break;
     case STATEMENT_SELECT:
       {
-	Result = ExecuteInsert(Statement, Table);
+	Result = ExecuteSelect(Statement, Table);
       }break;
     }
   return Result;
@@ -204,13 +202,17 @@ int main()
   // are also set only once 
   // TODO(l4v): Make this neater?
   size_t PageOffset = offsetof(table, Pages);
-  for(size_t PageIndex = 0;
-      PageIndex < TABLE_MAX_PAGES;
-      ++PageIndex)
-    {
-      Table->Pages[PageIndex] = (uint8 *)Table + PageOffset;
-      PageOffset += PAGE_SIZE;
-    }
+  /* for(size_t PageIndex = 0; */
+  /*     PageIndex < TABLE_MAX_PAGES; */
+  /*     ++PageIndex) */
+  /*   { */
+  /*     Table->Pages[PageIndex] = (uint8 *)Table + PageOffset; */
+  /*     PageOffset += PAGE_SIZE; */
+  /*   } */
+
+  // IMPORTANT TODO(l4v): ALLOCATION
+  /* Table->Pages2 = malloc(4 * sizeof(row)); */
+  Table->Pages = (uint8*)Table + PageOffset;
   
   input_buffer* InputBuffer = (input_buffer*)MainMemory.TransientMemory;
   *InputBuffer = (input_buffer){};

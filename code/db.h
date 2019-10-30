@@ -50,7 +50,9 @@ typedef struct
 typedef struct
 {
   uint32 NumOfRows;
-  void* Pages[TABLE_MAX_PAGES];
+  uint8* FirstEmpty;
+  /* void* Pages[TABLE_MAX_PAGES]; */
+  void* Pages;
 } table;
 
 typedef struct
